@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Globe, Filter, Search } from 'lucide-react';
+import { Globe, Filter, Search, Building2, TrendingUp, DollarSign } from 'lucide-react';
 import { PizzaChart } from './components/charts/pizza_chart';
 import { BarsChart } from './components/charts/bars_chart';
 import { SectorChart } from './components/charts/sector_charts';
@@ -7,6 +7,7 @@ import { BusinessTable } from './components/charts/business_table';
 import { allData, closedCompanies } from './data/dados';
 import { StatisticsCard } from './components/statistics_card';
 import InsightsSection from './components/insights_section';
+import { MultiMarketBusiness } from './components/multi_market_business';
 
 const Dashboard = () => {
   const [filtroCapital, setFiltroCapital] = useState('TODOS');
@@ -93,6 +94,29 @@ const Dashboard = () => {
     }
   ];
 
+  const empresasMultibolsa = useMemo(() => {
+    const empresasCount = dadosOriginais.reduce((acc, item) => {
+      if (item.capitalAberto === 'SIM') {
+        acc[item.empresa] = (acc[item.empresa] || 0) + 1;
+      }
+      return acc;
+    }, {});
+
+    return Object.entries(empresasCount)
+      .filter(([_, count]) => count > 1)
+      .map(([empresa]) => {
+        const listagens = dadosOriginais.filter(item => item.empresa === empresa);
+        return {
+          empresa,
+          setor: listagens[0].setor,
+          listagens: listagens.map(l => ({
+            bolsa: l.bolsa,
+            ticker: l.ticker
+          }))
+        };
+      });
+  }, [dadosOriginais]);
+
   return (
     <div className="min-h-screen p-6" style={{backgroundColor: '#C7E0F0'}}>
       <div className="max-w-7xl mx-auto">
@@ -150,15 +174,14 @@ const Dashboard = () => {
 
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <StatisticsCard tittle="Total de Empresas" data={totalEmpresas} />
-          <StatisticsCard tittle="Capital Aberto" data={empresasAbertas} />
-          <StatisticsCard tittle="Capital Fechado" data={empresasFechadas} />
-          <StatisticsCard tittle="Capital Aberto" data={percentualAbertas} />
+          <StatisticsCard tittle="Total de Empresas" icon={<Building2 className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={totalEmpresas} />
+          <StatisticsCard tittle="Capital Aberto" icon={<TrendingUp className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={empresasAbertas} />
+          <StatisticsCard tittle="Capital Fechado" icon={<DollarSign className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={empresasFechadas} />
+          <StatisticsCard tittle="Capital Aberto" icon={<Globe className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={percentualAbertas} />
         </div>
 
         {/* Gráficos */}
-        <div className="flex lg:grid-cols-2 gap-8 mb-8">
-
+        <div className="flex gap-8 mb-8">
           {/* Tabela de Empresas Filtradas */}
           <BusinessTable tittle="Empresas Filtradas" dadosFiltrados={dadosFiltrados} />
         </div>
@@ -166,7 +189,6 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Gráfico de Pizza - Distribuição de Capital */}
           <PizzaChart tittle="Distribuição por Tipo de Capital" dadosCapital={dadosCapital} />
-
           {/* Gráfico de Barras - Bolsas */}
           <BarsChart
             tittle="Empresas por Bolsa de Valores"
@@ -175,11 +197,13 @@ const Dashboard = () => {
         </div>
 
         {/* Gráfico de Setores e Tabela */}
-        <div className="flex grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="flex gap-8 mb-8">
           {/* Gráfico de Setores */}
           <SectorChart tittle="Distribuição por Setor (Capital Aberto)" dadosSetores={dadosSetores} />
+        </div>
 
-          
+        <div className="flex gap-8 mb-8">
+          <MultiMarketBusiness empresasMultibolsa={empresasMultibolsa} />
         </div>
 
         {/* Insights */}
