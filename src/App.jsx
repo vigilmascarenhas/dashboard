@@ -103,7 +103,7 @@ const Dashboard = () => {
     }, {});
 
     return Object.entries(empresasCount)
-      .filter(([_, count]) => count > 1)
+      .filter(([, count]) => count > 1)
       .map(([empresa]) => {
         const listagens = dadosOriginais.filter(item => item.empresa === empresa);
         return {
@@ -176,8 +176,8 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <StatisticsCard tittle="Total de Empresas" icon={<Building2 className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={totalEmpresas} />
           <StatisticsCard tittle="Capital Aberto" icon={<TrendingUp className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={empresasAbertas} />
-          <StatisticsCard tittle="Capital Fechado" icon={<DollarSign className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={empresasFechadas} />
-          <StatisticsCard tittle="Capital Aberto" icon={<Globe className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={percentualAbertas} />
+          <StatisticsCard tittle="Não Possui Ações" icon={<DollarSign className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={empresasFechadas} />
+          <StatisticsCard tittle="% Capital Aberto" icon={<Globe className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={percentualAbertas} />
         </div>
 
         {/* Gráficos */}
