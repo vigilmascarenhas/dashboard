@@ -73,7 +73,7 @@ const getSectorForCompany = (companyName) => {
 // Transform eduClients to allData format
 const eduData = eduClients.map(client => ({
   empresa: client.cliente,
-  capitalAberto: 'SIM', // All edu clients are publicly traded
+  capitalAberto: client.bolsa ? 'SIM' : 'NÃO', // Only publicly traded if they have stock exchange info
   bolsa: client.bolsa,
   ticker: client.ticker,
   setor: getSectorForCompany(client.cliente),

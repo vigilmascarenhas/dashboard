@@ -87,8 +87,6 @@ export const fetchUsStocks = async (symbols, onProgress) => {
       await delay(DELAY_BETWEEN_REQUESTS);
     }
   }
-
-  const successCount = results.filter(r => r.success).length;
   
   return results.filter(result => result.success); // Return only successful results
 };
