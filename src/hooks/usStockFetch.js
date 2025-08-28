@@ -4,7 +4,7 @@ import { fetchBRStocks } from '../service/brapi';
 import { fetchUsStocks } from '../service/finnhub';
 
 
-export const useStockFetch = () => {
+export const useStockFetch = (autoFetch = true) => {
   const [brStocks, setBrStocks] = useState([]);
   const [usStocks, setUsStocks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -25,20 +25,20 @@ export const useStockFetch = () => {
         return cleanSymbol;
       }).filter(symbol => symbol && symbol.length > 0);
 
-      console.log('symbols array:', symbolsArray);
-
+      // Fetch BR stocks first (faster, no rate limiting)
       const brFetch = await fetchBRStocks();
       const brStocks = filterBrStocks(brFetch);
-
-      const usFetch = await fetchUsStocks(symbolsArray);
-      console.log('Finnhub usFetch:', usFetch);
-      
-      // Finnhub returns real-time data, no deduplication needed
       setBrStocks(brStocks);
-      setUsStocks(usFetch || []);
+
+      // Fetch US stocks
+      if (symbolsArray.length > 0) {
+        const usFetch = await fetchUsStocks(symbolsArray);
+        
+        // Set final results
+        setUsStocks(usFetch || []);
+      }
 
     } catch (err) {
-      console.error('Error fetching market data:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -46,8 +46,10 @@ export const useStockFetch = () => {
   };
 
   useEffect(() => {
-    fetchMarketData();
-  }, []);
+    if (autoFetch) {
+      fetchMarketData();
+    }
+  }, [autoFetch]);
 
   return {
     brStocks,

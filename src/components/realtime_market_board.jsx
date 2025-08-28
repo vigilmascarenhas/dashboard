@@ -1,27 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { TrendingUp, TrendingDown, Activity, Wifi, WifiOff, MapPin, Play, Pause } from 'lucide-react';
-import { useStockFetch } from '../hooks/usStockFetch';
 import { brData, usData } from '../data/dados';
 
-export const RealtimeMarketBoard = () => {
-  const { brStocks, usStocks, loading, error } = useStockFetch();
+export const RealtimeMarketBoard = ({ brStocks, usStocks, loading, error, filtroCliente, refetch }) => {
 
-  const [lastUpdate, setLastUpdate] = useState(new Date());
+  // Filter companies based on client filter (fonte property)
+  const filteredBrData = filtroCliente === 'TODOS' ? brData : brData.filter(company => company.fonte === filtroCliente);
+  const filteredUsData = filtroCliente === 'TODOS' ? usData : usData.filter(company => company.fonte === filtroCliente);
 
-
-
-  // Update timestamp when data changes
-  useEffect(() => {
-    setLastUpdate(new Date());
-  }, [brStocks, usStocks]);
-
-  // Filter B3 businesses and get matching stocks
-  const b3Businesses = brData;
+  // Filter B3 businesses and get matching stocks (use filtered data)
+  const b3Businesses = filteredBrData;
   const b3Tickers = b3Businesses.map(business => business.ticker);
-  const allShowStocks = brStocks.filter(stock => b3Tickers.includes(stock.stock));
+  const allShowStocks = brStocks ? brStocks.filter(stock => b3Tickers.includes(stock.stock)) : [];
 
-  // Filter US businesses and get matching stocks (Finnhub format)
-  const usBusinesses = usData;
+  // Filter US businesses and get matching stocks (Finnhub format - use filtered data)
+  const usBusinesses = filteredUsData;
   const cleanedUsTickers = usBusinesses.map(business => {
     // Clean ticker the same way as in the hook
     let cleanSymbol = business.ticker.trim().replace(/^(NYSE:\s*|NASDAQ:\s*)/i, '');
@@ -31,14 +24,14 @@ export const RealtimeMarketBoard = () => {
   const usShowStocks = usStocks ? usStocks.filter(stock => cleanedUsTickers.includes(stock.ticker)) : [];
   
 
-  // Loading state
+  // Loading state with progress
   if (loading) {
     return (
       <div className="backdrop-blur-md rounded-xl p-6 border border-white/20 w-full" style={{background: '#FFFFFF'}}>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mb-4">
           <Activity className="h-5 w-5 text-blue-500 animate-spin" />
           <h3 className="text-xl font-semibold text-black">
-            Carregando dados B3 ()...
+            Carregando Informação de Bolsa
           </h3>
         </div>
       </div>
@@ -49,11 +42,29 @@ export const RealtimeMarketBoard = () => {
   if (error) {
     return (
       <div className="backdrop-blur-md rounded-xl p-6 border border-red-200 w-full" style={{background: '#FFFFFF'}}>
-        <div className="flex items-center gap-3">
-          <WifiOff className="h-5 w-5 text-red-500" />
-          <h3 className="text-xl font-semibold text-red-600">
-            Erro ao carregar dados B3: {error}
-          </h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <WifiOff className="h-5 w-5 text-red-500" />
+            <div>
+              <h3 className="text-xl font-semibold text-red-600">
+                Erro ao carregar dados do mercado
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {error.includes('429') 
+                  ? 'Limite de requisições excedido. Tentando novamente com rate limiting...'
+                  : error
+                }
+              </p>
+            </div>
+          </div>
+          {refetch && (
+            <button 
+              onClick={refetch}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Tentar Novamente
+            </button>
+          )}
         </div>
       </div>
     );
@@ -81,11 +92,7 @@ export const RealtimeMarketBoard = () => {
     return change >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />;
   };
 
-  // Helper function for US market formatting
-  const formatUSPrice = (price) => {
-    if (!price || isNaN(price)) return '$ --';
-    return `$ ${Number(price).toFixed(2)}`;
-  };
+
 
   return (
     <>  
@@ -98,22 +105,12 @@ export const RealtimeMarketBoard = () => {
             <Activity className="h-6 w-6" style={{color: '#4398CB'}} />
             <h2 className="text-2xl font-bold text-black">B3</h2>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Wifi className="h-5 w-5 text-green-600" />
-              <span className="text-sm text-green-600 font-medium">Live ({allShowStocks.length})</span>
-            </div>
-            <div className="text-xs text-gray-500">
-              Última atualização: {lastUpdate.toLocaleTimeString()}
-            </div>
-          </div>
         </div>
 
         {/* Stock Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {allShowStocks.map(stock => {
             // Find corresponding business info from B3 data
-            const market = 'B3';
             const businessInfo = b3Businesses.find(business => business.ticker === stock.stock);
             
             return (
@@ -149,10 +146,6 @@ export const RealtimeMarketBoard = () => {
                   {formatChange(stock.change, stock.changePercent)}
                 </div>
                 
-                <div className="text-xs font-medium text-blue-500 mb-1">
-                  {market}
-                </div>
-                
                 <div className="text-xs text-gray-600 mt-2 space-y-1">
                   {businessInfo && (
                     <div className="flex justify-between">
@@ -168,37 +161,27 @@ export const RealtimeMarketBoard = () => {
       </div>
     )}
 
-    {/* US Market Success state */}
+    {/* US Market - Show data when available */}
     {usShowStocks.length > 0 && (
-      <div className="backdrop-blur-md rounded-xl p-6 border mt-6" style={{background: '#FFFFFF', borderColor: '#059669'}}>
+      <div className="backdrop-blur-md rounded-xl p-6 border mt-6" style={{background: '#FFFFFF', borderColor: '#4398CB'}}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Activity className="h-6 w-6" style={{color: '#059669'}} />
+            <Activity className="h-6 w-6" style={{color: '#FF6B35'}} />
             <h2 className="text-2xl font-bold text-black">NYSE/NASDAQ</h2>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Wifi className="h-5 w-5 text-green-600" />
-              <span className="text-sm text-green-600 font-medium">Live ({usShowStocks.length})</span>
-            </div>
-            <div className="text-xs text-gray-500">
-              Última atualização: {lastUpdate.toLocaleTimeString()}
-            </div>
           </div>
         </div>
 
         {/* Stock Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {usShowStocks.map(stock => {
-            // Find corresponding business info from US data (match cleaned ticker)
+            // Find corresponding business info from US data
+            
             const businessInfo = usBusinesses.find(business => {
               let cleanSymbol = business.ticker.trim().replace(/^(NYSE:\s*|NASDAQ:\s*)/i, '');
               cleanSymbol = cleanSymbol.split(';')[0].trim();
               return cleanSymbol === stock.ticker;
             });
-            const change = stock.change || 0;
-            const changePercent = stock.changePercent || 0;
             
             return (
               <div 
@@ -206,7 +189,7 @@ export const RealtimeMarketBoard = () => {
                 className="p-4 rounded-lg border-2 transition-all duration-300 hover:shadow-lg"
                 style={{
                   backgroundColor: '#F8FAFC',
-                  borderColor: change >= 0 ? '#10B981' : change < 0 ? '#EF4444' : '#E5E7EB'
+                  borderColor: stock.change >= 0 ? '#10B981' : stock.change < 0 ? '#EF4444' : '#E5E7EB'
                 }}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -218,38 +201,57 @@ export const RealtimeMarketBoard = () => {
                       </div>
                     )}
                   </div>
-                  <div className={change >= 0 ? 'text-green-600' : 'text-red-600'}>
-                    {change >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                  </div>
+                  {stock.change !== undefined && (
+                    <div className={getChangeColor(stock.change)}>
+                      {getChangeIcon(stock.change)}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="text-2xl font-bold text-black mb-1">
-                  {formatUSPrice(stock.current)}
+                  ${Number(stock.current || 0).toFixed(2)}
                 </div>
                 
-                <div className={`text-sm font-medium ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {change >= 0 ? '+' : ''}${Number(change).toFixed(2)} ({change >= 0 ? '+' : ''}{Number(changePercent).toFixed(2)}%)
-                </div>
-                
-                <div className="text-xs font-medium text-emerald-600 mb-1">
-                  {businessInfo?.bolsa?.includes('NASDAQ') ? 'NASDAQ' : 'NYSE'}
+                <div className={`text-sm font-medium ${getChangeColor(stock.change)}`}>
+                  {stock.change !== undefined && stock.changePercent !== undefined ? (
+                    `${stock.change >= 0 ? '+' : ''}$${Number(stock.change).toFixed(2)} (${stock.change >= 0 ? '+' : ''}${Number(stock.changePercent).toFixed(2)}%)`
+                  ) : '--'}
                 </div>
                 
                 <div className="text-xs text-gray-600 mt-2 space-y-1">
                   {businessInfo && (
                     <div className="flex justify-between">
                       <span>Setor:</span>
-                      <span className="text-emerald-600">{businessInfo.setor}</span>
+                      <span className="text-orange-600">{businessInfo.setor}</span>
                     </div>
                   )}
-                  <div className="flex justify-between">
-                    <span>Tempo Real:</span>
-                    <span className="text-green-600">✓</span>
-                  </div>
                 </div>
               </div>
             );
           })}
+        </div>
+      </div>
+    )}
+    
+    {/* US Market Loading State */}
+    {usShowStocks.length === 0 && (usStocks && usStocks.length === 0) && !loading && (
+      <div className="backdrop-blur-md rounded-xl p-6 border mt-6" style={{background: '#FFFFFF', borderColor: '#9CA3AF'}}>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <WifiOff className="h-6 w-6 text-gray-500" />
+            <h2 className="text-2xl font-bold text-gray-600">NYSE/NASDAQ</h2>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <WifiOff className="h-5 w-5 text-gray-400" />
+              <span className="text-sm text-gray-400 font-medium">Sem dados</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-4 text-center text-sm text-gray-500">
+          🇺🇸 Nenhuma empresa americana encontrada no filtro atual
         </div>
       </div>
     )}

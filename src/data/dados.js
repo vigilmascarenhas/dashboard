@@ -109,17 +109,17 @@ const closedCompanies = [
 // Separate NYSE and B3 data for easier access
 const usData = allData.filter(company => 
   company.bolsa && (
-    company.bolsa.includes('BOLSA DE NY (NYSE)') || 
-    company.bolsa.includes('NASDAQ')
+    company.bolsa === 'NYSE' || 
+    company.bolsa === 'NASDAQ'
   )
 );
 
 const eurData = allData.filter(company => 
-  company.bolsa && company.bolsa.includes('BOLSA DE LISBOA (EURONEXT)')
+  company.bolsa && company.bolsa === 'ENX'
 );
 
 const brData = allData.filter(company => 
-  company.bolsa && company.bolsa.includes('BOLSA DE SP (B3)')
+  company.bolsa && company.bolsa === 'B3'
 );
 
 // Additional filters

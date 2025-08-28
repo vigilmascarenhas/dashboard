@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Globe, Filter, Search, Building2, TrendingUp, DollarSign } from 'lucide-react';
 import { PizzaChart } from './components/charts/pizza_chart';
 import { BarsChart } from './components/charts/bars_chart';
@@ -9,6 +9,8 @@ import { StatisticsCard } from './components/statistics_card';
 import InsightsSection from './components/insights_section';
 import { MultiMarketBusiness } from './components/multi_market_business';
 import { RealtimeMarketBoard } from './components/realtime_market_board';
+import { useStockFetch } from './hooks/usStockFetch';
+
 
 const Dashboard = () => {
   const [filtroCapital, setFiltroCapital] = useState('TODOS');
@@ -16,8 +18,41 @@ const Dashboard = () => {
   const [filtroCliente, setFiltroCliente] = useState('TODOS');
   const [busca, setBusca] = useState('');
 
+  // Fetch stock data
+  const { brStocks, usStocks, loading, error, refetch } = useStockFetch();
   const dadosOriginais = allData;
   const empresasNaoAbertas = closedCompanies;
+
+  // Helper function to get unique businesses (normalize multi-exchange duplicates)
+  const getUniqueBusinesses = useCallback((data) => {
+    const businessMap = new Map();
+    
+    data.forEach(item => {
+      const key = `${item.empresa}-${item.fonte || 'UNKNOWN'}`;
+      
+      if (!businessMap.has(key)) {
+        // First occurrence of this business
+        businessMap.set(key, {
+          ...item,
+          bolsas: [item.bolsa],
+          tickers: [item.ticker],
+          allListings: [item]
+        });
+      } else {
+        // Additional exchange listing for the same business
+        const existing = businessMap.get(key);
+        if (item.bolsa && !existing.bolsas.includes(item.bolsa)) {
+          existing.bolsas.push(item.bolsa);
+        }
+        if (item.ticker && !existing.tickers.includes(item.ticker)) {
+          existing.tickers.push(item.ticker);
+        }
+        existing.allListings.push(item);
+      }
+    });
+    
+    return Array.from(businessMap.values());
+  }, []);
 
   // Adicionar empresas não abertas aos dados
   const dadosCompletos = useMemo(() => [
@@ -31,106 +66,232 @@ const Dashboard = () => {
     }))
   ], [dadosOriginais, empresasNaoAbertas]);
 
-  // Filtrar dados
-  const dadosFiltrados = useMemo(() => {
-    return dadosCompletos.filter(item => {
-      const matchCapital = filtroCapital === 'TODOS' || item.capitalAberto === filtroCapital;
-      const matchBolsa = filtroBolsa === 'TODAS' || item.bolsa === filtroBolsa;
-      const matchCliente = filtroCliente === 'TODOS' || item.fonte === filtroCliente;
-      const matchBusca = item.empresa.toLowerCase().includes(busca.toLowerCase());
+  // Get unique businesses first (avoiding multi-exchange duplicates)
+  const uniqueBusinesses = useMemo(() => {
+    return getUniqueBusinesses(dadosCompletos);
+  }, [dadosCompletos, getUniqueBusinesses]);
+
+
+
+
+
+  // Helper function to normalize exchange names to clean, standard names
+  const normalizeExchangeName = (exchangeName) => {
+    if (!exchangeName || exchangeName === '-') return null;
+    
+    // Since bolsa names are already normalized at source, this function now mainly
+    // provides display names for the UI
+    const displayMap = {
+      // US Markets
+      'NYSE': 'NYSE',
+      'NASDAQ': 'NASDAQ',
+      
+      // Brazilian Market
+      'B3': 'B3',
+      
+      // European Markets
+      'EPA': 'Euronext Paris',
+      'BIT': 'Borsa Italiana', 
+      'FTMIB': 'Borsa Italiana',
+      'XETRA': 'XETRA',
+      'EURONEXT': 'Euronext Amsterdam',
+      'SIX': 'SIX Swiss Exchange',
+      
+      // Asian Markets
+      'TSE': 'Tokyo Stock Exchange',
+      'KRX': 'Korea Exchange',
+      
+      // Other Markets
+      'BELEX': 'Belgrade Stock Exchange',
+      'TSX': 'Toronto Stock Exchange',
+      'ENX': 'Euronext'
+    };
+    
+    return displayMap[exchangeName] || exchangeName;
+  };
+
+  // Helper function to check if a business matches exchange filter
+  const matchesExchangeFilter = useCallback((business, exchangeFilter) => {
+    if (exchangeFilter === 'TODAS') return true;
+    
+    // For multi-exchange businesses, check if any of their listings match
+    if (business.bolsas) {
+      return business.bolsas.some(bolsa => {
+        const normalizedBolsa = normalizeExchangeName(bolsa);
+        return normalizedBolsa === exchangeFilter;
+      });
+    }
+    const normalizedBolsa = normalizeExchangeName(business.bolsa);
+    return normalizedBolsa === exchangeFilter;
+  }, []);
+
+
+
+  // Filter unique businesses
+  const uniqueBusinessesFiltered = useMemo(() => {
+    return uniqueBusinesses.filter(business => {
+      const matchCapital = filtroCapital === 'TODOS' || business.capitalAberto === filtroCapital;
+      const matchBolsa = matchesExchangeFilter(business, filtroBolsa);
+      const matchCliente = filtroCliente === 'TODOS' || business.fonte === filtroCliente;
+      const matchBusca = business.empresa.toLowerCase().includes(busca.toLowerCase());
       return matchCapital && matchBolsa && matchCliente && matchBusca;
     });
-  }, [filtroCapital, filtroBolsa, filtroCliente, busca, dadosCompletos]);
+  }, [filtroCapital, filtroBolsa, filtroCliente, busca, uniqueBusinesses, matchesExchangeFilter]);
 
-  // Calcular estatísticas baseadas nos dados filtrados
-  const totalEmpresas = dadosFiltrados.length;
-  const empresasAbertas = dadosFiltrados.filter(item => item.capitalAberto === 'SIM').length;
+  // Expand filtered unique businesses back to individual listings for display
+  const dadosFiltrados = useMemo(() => {
+    const expandedListings = [];
+    
+    uniqueBusinessesFiltered.forEach(business => {
+      if (business.allListings) {
+        // Multi-exchange business: add all listings that match exchange filter
+        business.allListings.forEach(listing => {
+          const normalizedExchange = normalizeExchangeName(listing.bolsa);
+          const matchBolsa = filtroBolsa === 'TODAS' || normalizedExchange === filtroBolsa;
+          if (matchBolsa) {
+            expandedListings.push(listing);
+          }
+        });
+      } else {
+        // Single listing business
+        const normalizedExchange = normalizeExchangeName(business.bolsa);
+        const matchBolsa = filtroBolsa === 'TODAS' || normalizedExchange === filtroBolsa;
+        if (matchBolsa) {
+          expandedListings.push(business);
+        }
+      }
+    });
+    
+    return expandedListings;
+  }, [uniqueBusinessesFiltered, filtroBolsa]);
+
+  // Calcular estatísticas baseadas nos negócios únicos (evitar double-counting)
+  const totalEmpresas = uniqueBusinessesFiltered.length;
+  const empresasAbertas = uniqueBusinessesFiltered.filter(item => item.capitalAberto === 'SIM').length;
   const empresasFechadas = totalEmpresas - empresasAbertas;
   const percentualAbertas = totalEmpresas > 0 ? ((empresasAbertas / totalEmpresas) * 100).toFixed(1) : '0.0';
 
-  // Dados para gráfico de distribuição de capital
-  const dadosCapital = [
-    { name: 'Capital Aberto', value: empresasAbertas, color: '#8BC0DE' },
-    { name: 'Capital Fechado', value: empresasFechadas, color: '#4398CB' }
-  ];
+  // Dados para gráfico de distribuição de capital - apenas filtrado por cliente
+  const dadosCapital = useMemo(() => {
+    // Filtrar apenas por cliente, ignorando outros filtros
+    const businessesFilteredByClient = uniqueBusinesses.filter(business => {
+      const matchCliente = filtroCliente === 'TODOS' || business.fonte === filtroCliente;
+      return matchCliente;
+    });
+    
+    const empresasAbertasCapital = businessesFilteredByClient.filter(item => item.capitalAberto === 'SIM').length;
+    const empresasFechadasCapital = businessesFilteredByClient.length - empresasAbertasCapital;
+    
+    return [
+      { name: 'Listadas na Bolsa', value: empresasAbertasCapital, color: '#8BC0DE' },
+      { name: 'Não Listadas na Bolsa', value: empresasFechadasCapital, color: '#4398CB' }
+    ];
+  }, [uniqueBusinesses, filtroCliente]);
 
-  // Dados para gráfico de bolsas
+  // Helper function to create short display names for chart x-axis
+  const getShortExchangeName = (exchangeName) => {
+    const shortNameMap = {
+      'NYSE': 'NYSE',
+      'NASDAQ': 'NASDAQ', 
+      'B3': 'B3',
+      'EPA': 'PAR',
+      'BIT': 'MIL',
+      'FTMIB': 'MIL',
+      'XETRA': 'FRA',
+      'EURONEXT': 'AMS',
+      'SIX': 'ZUR',
+      'TSE': 'TKY',
+      'KRX': 'SEO',
+      'BELEX': 'BEL',
+      'TSX': 'TOR',
+      'ENX': 'ENX'
+    };
+    
+    return shortNameMap[exchangeName] || exchangeName;
+  };
+
+  // Dados para gráfico de bolsas - apenas filtrado por cliente
   const dadosBolsas = useMemo(() => {
+    // Filtrar apenas por cliente, ignorando outros filtros
+    const businessesFilteredByClient = uniqueBusinesses.filter(business => {
+      const matchCliente = filtroCliente === 'TODOS' || business.fonte === filtroCliente;
+      return matchCliente;
+    });
+    
     const bolsas = {};
-    dadosFiltrados.forEach(item => {
-      if (item.capitalAberto === 'SIM' && item.bolsa !== '-') {
-        const bolsa = item.bolsa;
-        bolsas[bolsa] = (bolsas[bolsa] || 0) + 1;
+    
+    businessesFilteredByClient.forEach(business => {
+      if (business.capitalAberto === 'SIM') {
+        // For multi-exchange businesses, count each exchange they're listed on
+        const businessBolsas = business.bolsas || [business.bolsa];
+        businessBolsas.forEach(bolsa => {
+          const normalizedExchange = normalizeExchangeName(bolsa);
+          if (normalizedExchange) {
+            const shortName = getShortExchangeName(normalizedExchange);
+            bolsas[shortName] = (bolsas[shortName] || 0) + 1;
+          }
+        });
       }
     });
+    
     return Object.entries(bolsas)
       .map(([nome, quantidade]) => ({ nome, quantidade }))
       .sort((a, b) => b.quantidade - a.quantidade);
-  }, [dadosFiltrados]);
+  }, [uniqueBusinesses, filtroCliente]);
 
-  // Dados para gráfico de setores
+  // Dados para gráfico de setores (baseado em negócios únicos)
   const dadosSetores = useMemo(() => {
     const setores = {};
-    dadosFiltrados.forEach(item => {
-      if (item.capitalAberto === 'SIM') {
-        setores[item.setor] = (setores[item.setor] || 0) + 1;
+    uniqueBusinessesFiltered.forEach(business => {
+      if (business.capitalAberto === 'SIM') {
+        setores[business.setor] = (setores[business.setor] || 0) + 1;
       }
     });
     return Object.entries(setores)
       .map(([nome, quantidade]) => ({ nome, quantidade }))
       .sort((a, b) => b.quantidade - a.quantidade);
-  }, [dadosFiltrados]);
+  }, [uniqueBusinessesFiltered]);
 
-  // Dados para insights baseados nos filtros atuais
-  const insights = useMemo(() => {
-    const clienteText = filtroCliente === 'GE' ? 'clientes GE' : filtroCliente === 'EDU' ? 'clientes EDU' : 'clientes';
-    const setorPrincipal = dadosSetores.length > 0 ? dadosSetores[0].nome : 'N/A';
-    const bolsaPrincipal = dadosBolsas.length > 0 ? dadosBolsas[0].nome : 'N/A';
+
+
+  // Get all available exchanges for the filter dropdown (normalized names)
+  const availableExchanges = useMemo(() => {
+    const exchanges = new Set();
     
-    return [
-      {
-        insightTittle: 'Diversificação Geográfica',
-        InsightText: `Portfólio de ${clienteText} com presença em ${dadosBolsas.length} bolsas diferentes${dadosBolsas.length > 0 ? `, sendo a principal ${bolsaPrincipal}` : ''}.`
-      },
-      {
-        insightTittle: 'Distribuição de Capital',
-        InsightText: `Entre os ${clienteText}, ${empresasAbertas} são de capital aberto (${percentualAbertas}%) e ${empresasFechadas} são de capital fechado.`
-      },
-      {
-        insightTittle: 'Concentração Setorial',
-        InsightText: dadosSetores.length > 0 ? `O setor ${setorPrincipal} possui ${dadosSetores[0].quantidade} empresas, sendo o segmento com maior representação.` : 'Nenhum setor identificado com os filtros atuais.'
+    uniqueBusinesses.forEach(business => {
+      if (business.capitalAberto === 'SIM') {
+        const businessBolsas = business.bolsas || [business.bolsa];
+        businessBolsas.forEach(bolsa => {
+          const normalizedExchange = normalizeExchangeName(bolsa);
+          if (normalizedExchange) {
+            exchanges.add(normalizedExchange);
+          }
+        });
       }
-    ];
-  }, [dadosSetores, dadosBolsas, empresasAbertas, empresasFechadas, percentualAbertas, filtroCliente]);
+    });
+    
+    return Array.from(exchanges).sort();
+  }, [uniqueBusinesses]);
 
   const empresasMultibolsa = useMemo(() => {
-    // Use dados completos (filtered by client type) for multi-exchange analysis
-    const dadosParaAnalise = dadosCompletos.filter(item => {
-      const matchCliente = filtroCliente === 'TODOS' || item.fonte === filtroCliente;
+    // Filter by client type first
+    const clientFilteredBusinesses = uniqueBusinesses.filter(business => {
+      const matchCliente = filtroCliente === 'TODOS' || business.fonte === filtroCliente;
       return matchCliente;
     });
 
-    const empresasCount = dadosParaAnalise.reduce((acc, item) => {
-      if (item.capitalAberto === 'SIM') {
-        acc[item.empresa] = (acc[item.empresa] || 0) + 1;
-      }
-      return acc;
-    }, {});
-
-    return Object.entries(empresasCount)
-      .filter(([, count]) => count > 1)
-      .map(([empresa]) => {
-        const listagens = dadosParaAnalise.filter(item => item.empresa === empresa);
-        return {
-          empresa,
-          setor: listagens[0].setor,
-          listagens: listagens.map(l => ({
-            bolsa: l.bolsa,
-            ticker: l.ticker
-          }))
-        };
-      });
-  }, [dadosCompletos, filtroCliente]);
+    // Find businesses with multiple exchanges
+    return clientFilteredBusinesses
+      .filter(business => business.allListings && business.allListings.length > 1 && business.capitalAberto === 'SIM')
+      .map(business => ({
+        empresa: business.empresa,
+        setor: business.setor,
+        listagens: business.allListings.map(l => ({
+          bolsa: l.bolsa,
+          ticker: l.ticker
+        }))
+      }));
+  }, [uniqueBusinesses, filtroCliente]);
 
   return (
     <div className="min-h-screen p-6" style={{backgroundColor: '#C7E0F0'}}>
@@ -153,8 +314,8 @@ const Dashboard = () => {
                 style={{backgroundColor: 'rgba(255,255,255,0.2)', borderColor: '#8BC0DE'}}
               >
                 <option value="TODOS">Todos</option>
-                <option value="SIM">Capital Aberto</option>
-                <option value="NÃO">Capital Fechado</option>
+                <option value="SIM">Listadas na Bolsa</option>
+                <option value="NÃO">Não Listadas na Bolsa</option>
               </select>
             </div>
 
@@ -181,8 +342,8 @@ const Dashboard = () => {
                 style={{backgroundColor: 'rgba(255,255,255,0.2)', borderColor: '#8BC0DE'}}
               >
                 <option value="TODAS">Todas as Bolsas</option>
-                {dadosBolsas.map(bolsa => (
-                  <option key={bolsa.nome} value={bolsa.nome}>{bolsa.nome}</option>
+                {availableExchanges.map(exchange => (
+                  <option key={exchange} value={exchange}>{exchange}</option>
                 ))}
               </select>
             </div>
@@ -201,17 +362,12 @@ const Dashboard = () => {
           </div>
         </div>
 
-        Real-time Market Board
-        <div className="mb-8">
-          <RealtimeMarketBoard />
-        </div>
-
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <StatisticsCard tittle="Total de Empresas" icon={<Building2 className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={totalEmpresas} />
-          <StatisticsCard tittle="Capital Aberto" icon={<TrendingUp className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={empresasAbertas} />
-          <StatisticsCard tittle="Não Possui Ações" icon={<DollarSign className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={empresasFechadas} />
-          <StatisticsCard tittle="% Capital Aberto" icon={<Globe className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={percentualAbertas} />
+          <StatisticsCard tittle="Listadas na Bolsa" icon={<TrendingUp className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={empresasAbertas} />
+          <StatisticsCard tittle="Não Listadas na Bolsa" icon={<DollarSign className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={empresasFechadas} />
+          <StatisticsCard tittle="% Listadas na Bolsa" icon={<Globe className="h-12 w-12" style={{color: '#FFFFFF'}} />} data={percentualAbertas} />
         </div>
 
         {/* Gráficos */}
@@ -222,26 +378,40 @@ const Dashboard = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Gráfico de Pizza - Distribuição de Capital */}
-          <PizzaChart tittle="Distribuição por Tipo de Capital" dadosCapital={dadosCapital} />
+          <PizzaChart 
+            tittle="Distribuição por Tipo de Capital" 
+            dadosCapital={dadosCapital} 
+            filtroCliente={filtroCliente}
+          />
           {/* Gráfico de Barras - Bolsas */}
           <BarsChart
             tittle="Empresas por Bolsa de Valores"
             dadosBolsas={dadosBolsas}
+            filtroCliente={filtroCliente}
           />
         </div>
 
         {/* Gráfico de Setores e Tabela */}
         <div className="flex gap-8 mb-8">
           {/* Gráfico de Setores */}
-          <SectorChart tittle="Distribuição por Setor (Capital Aberto)" dadosSetores={dadosSetores} />
+          <SectorChart tittle="Distribuição por Setor (Listadas na Bolsa)" dadosSetores={dadosSetores} />
         </div>
 
         <div className="flex gap-8 mb-8">
           <MultiMarketBusiness empresasMultibolsa={empresasMultibolsa} />
         </div>
 
-        {/* Insights */}
-        <InsightsSection insights={insights} />
+        {/* Real-time Market Board */}
+        <div className="mb-8">
+          <RealtimeMarketBoard 
+            brStocks={brStocks}
+            usStocks={usStocks}
+            loading={loading}
+            error={error}
+            refetch={refetch}
+            filtroCliente={filtroCliente}
+          />
+        </div>
       </div>
     </div>
   );

@@ -1,71 +1,66 @@
 const eduClients = [
-  { cliente: 'BAXTER', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'BAX', observacao: null },
-  { cliente: 'FORD', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'F', observacao: null },
-  { cliente: 'FITESA', bolsa: 'BOLSA DE SP (B3)', ticker: 'FIT3', observacao: null },
-  { cliente: 'MAHLE', bolsa: 'BOLSA DE SP (B3)', ticker: 'LEVE3', observacao: null },
-  { cliente: 'METALAC', bolsa: 'BOLSA DE BELGRADO (BELEX)', ticker: 'MTLC', observacao: null },
-  { cliente: 'ROP - ENGIE', bolsa: 'BOLSA DE SP (B3)', ticker: 'EGIE3', observacao: null },
-  { cliente: 'BAKER HUGHES', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'BKR', observacao: 'BHGE (GE Company)' },
-  { cliente: 'CROWN', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'CCK', observacao: 'Crown Holdings' },
-  { cliente: 'Koito Manufacturing Co Ltd (NAL DO BRASIL)', bolsa: 'BOLSA DE TÓQUIO (TSE)', ticker: '7276', observacao: null },
-  { cliente: 'Asahi Glass Co (AGC)', bolsa: 'BOLSA DE TÓQUIO (TSE)', ticker: '5201', observacao: null },
-  { cliente: 'CJ', bolsa: 'BOLSA DA COREIA DO SUL (KRX)', ticker: 'KRX: 001040', observacao: null },
-  { cliente: 'CNH Industrial', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'NYSE: CNH', observacao: null },
-  { cliente: 'Faurecia', bolsa: 'BOLSA DE PARIS (EPA)', ticker: 'EPA: FRVIA', observacao: null },
-  { cliente: 'GE HealthCare', bolsa: 'BOLSA DE NY (NASDAQ)', ticker: 'NASDAQ: GEHC', observacao: null },
-  { cliente: 'Groupe SEB', bolsa: 'BOLSA DE PARIS (EPA)', ticker: 'EPA: SK', observacao: null },
-  { cliente: 'GE Vernova', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'NYSE: GEV', observacao: null },
-  { cliente: 'Iveco', bolsa: 'BOLSA DE MILÃO (BIT)', ticker: 'BIT: IVG', observacao: null },
-  { cliente: 'Legrand', bolsa: 'BOLSA DE PARIS (EPA)', ticker: 'EPA: LR', observacao: null },
-  { cliente: 'Yamaha', bolsa: 'BOLSA DE TÓQUIO (TSE)', ticker: 'TYO: 7951', observacao: null },
-  { cliente: 'AKZO NOBEL', bolsa: 'Euronext Amsterdam', ticker: 'AKZA', observacao: null },
-  { cliente: 'BRIDGESTONE', bolsa: 'BOLSA DE TÓQUIO (TSE)', ticker: '5108', observacao: null },
-  { cliente: 'COLGATE', bolsa: 'BOLSA DE SP (B3)', ticker: 'COLG34', observacao: null },
-  { cliente: 'COLGATE', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'CL', observacao: null },
-  { cliente: 'FRESENIUS', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'FMS', observacao: null },
-  { cliente: 'FRESENIUS', bolsa: 'XETRA (Frankfurt)', ticker: 'FRE', observacao: null },
-  { cliente: 'FRESENIUS', bolsa: 'XETRA (Frankfurt)', ticker: 'FME', observacao: null },
-  { cliente: 'PANASONIC', bolsa: 'BOLSA DE TÓQUIO (TSE)', ticker: '6752', observacao: null },
-  { cliente: 'PPG', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'PPG', observacao: null },
-  { cliente: 'TOYOTA', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'TM', observacao: null },
-  { cliente: 'TOYOTA', bolsa: 'BOLSA DE TÓQUIO (TSE)', ticker: '7203', observacao: null },
-  { cliente: 'TUPPERWARE', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'TUP', observacao: null },
-  { cliente: 'TUPY', bolsa: 'BOLSA DE SP (B3)', ticker: 'TUPY3', observacao: null },
-  { cliente: 'CCL', bolsa: 'TORONTO STOCK EXCHANGE (TSX)', ticker: 'CCL-B.TO', observacao: null },
-  { cliente: 'FRAPORT', bolsa: 'Bolsa de Frankfurt (Xetra)', ticker: 'FRA ou FRAG', observacao: null },
-  { cliente: 'NOVARTIS', bolsa: 'Bolsa de Valores de Zurique (SIX); B3 (Brasil, via BDR)', ticker: 'N1VS34', observacao: null },
-  { cliente: 'SANDOZ', bolsa: 'Bolsa de Valores de Zurique (SIX Swiss Exchange SIX)', ticker: 'SDZ', observacao: null },
-  { cliente: 'TDK', bolsa: 'Bolsa de Valores de Tóquio (Tokyo Stock Exchange) e Mercado OCT dos EUA', ticker: 'TTDKY', observacao: null },
-  { cliente: 'DAF', bolsa: 'Bolsa NASDAQ USA', ticker: 'PCAR', observacao: 'Paccar (Subsidiária da DAF)' },
-  { cliente: 'DENSO', bolsa: 'Tokyo Stock Exchange', ticker: '6902', observacao: 'Denso Corporation' },
-  { cliente: 'MERCK', bolsa: 'Bolsa de NY (NYSE), B3', ticker: 'MRK; MRCK34', observacao: 'Merck & Co., Inc.' },
-  { cliente: 'OMPI', bolsa: 'Bolsa de NY (NYSE)', ticker: 'STVN', observacao: 'Stevanato Group' },
-  { cliente: 'THYSSENKRUPP', bolsa: 'Frankfurt Stock Exchange', ticker: 'TKA', observacao: 'ThyssenKrupp AG' },
-  { cliente: 'BREMBO', bolsa: 'Bolsa de Valores de Milão', ticker: 'BRE', observacao: 'Brembo S.p.A (matriz)' },
-  { cliente: 'WABTEC', bolsa: 'Bolsa de Valores de NY (NYSE)', ticker: 'WAB', observacao: null }
+  { cliente: 'BAXTER', bolsa: 'NYSE', ticker: 'BAX', observacao: null },
+  { cliente: 'FORD', bolsa: 'NYSE', ticker: 'F', observacao: null },
+  { cliente: 'FITESA', bolsa: 'B3', ticker: 'FIT3', observacao: null },
+  { cliente: 'MAHLE', bolsa: 'B3', ticker: 'LEVE3', observacao: null },
+  { cliente: 'METALAC', bolsa: 'BELEX', ticker: 'MTLC', observacao: null },
+  { cliente: 'ROP - ENGIE', bolsa: 'B3', ticker: 'EGIE3', observacao: null },
+  { cliente: 'BAKER HUGHES', bolsa: 'NYSE', ticker: 'BKR', observacao: 'BHGE (GE Company)' },
+  { cliente: 'CROWN', bolsa: 'NYSE', ticker: 'CCK', observacao: 'Crown Holdings' },
+  { cliente: 'Koito Manufacturing Co Ltd (NAL DO BRASIL)', bolsa: 'TSE', ticker: '7276', observacao: null },
+  { cliente: 'Asahi Glass Co (AGC)', bolsa: 'TSE', ticker: '5201', observacao: null },
+  { cliente: 'CJ', bolsa: 'KRX', ticker: 'KRX: 001040', observacao: null },
+  { cliente: 'CNH Industrial', bolsa: 'NYSE', ticker: 'NYSE: CNH', observacao: null },
+  { cliente: 'Faurecia', bolsa: 'EPA', ticker: 'EPA: FRVIA', observacao: null },
+  { cliente: 'GE HealthCare', bolsa: 'NASDAQ', ticker: 'NASDAQ: GEHC', observacao: null },
+  { cliente: 'Groupe SEB', bolsa: 'EPA', ticker: 'EPA: SK', observacao: null },
+  { cliente: 'GE Vernova', bolsa: 'NYSE', ticker: 'NYSE: GEV', observacao: null },
+  { cliente: 'Iveco', bolsa: 'BIT', ticker: 'BIT: IVG', observacao: null },
+  { cliente: 'Legrand', bolsa: 'EPA', ticker: 'EPA: LR', observacao: null },
+  { cliente: 'Yamaha', bolsa: 'TSE', ticker: 'TYO: 7951', observacao: null },
+  { cliente: 'AKZO NOBEL', bolsa: 'EURONEXT', ticker: 'AKZA', observacao: null },
+  { cliente: 'BRIDGESTONE', bolsa: 'TSE', ticker: '5108', observacao: null },
+  { cliente: 'COLGATE', bolsa: 'B3', ticker: 'COLG34', observacao: null },
+  { cliente: 'COLGATE', bolsa: 'NYSE', ticker: 'CL', observacao: null },
+  { cliente: 'FRESENIUS', bolsa: 'NYSE', ticker: 'FMS', observacao: null },
+  { cliente: 'FRESENIUS', bolsa: 'XETRA', ticker: 'FRE', observacao: null },
+  { cliente: 'FRESENIUS', bolsa: 'XETRA', ticker: 'FME', observacao: null },
+  { cliente: 'PANASONIC', bolsa: 'TSE', ticker: '6752', observacao: null },
+  { cliente: 'PPG', bolsa: 'NYSE', ticker: 'PPG', observacao: null },
+  { cliente: 'TOYOTA', bolsa: 'NYSE', ticker: 'TM', observacao: null },
+  { cliente: 'TOYOTA', bolsa: 'TSE', ticker: '7203', observacao: null },
+  { cliente: 'TUPPERWARE', bolsa: 'NYSE', ticker: 'TUP', observacao: null },
+  { cliente: 'TUPY', bolsa: 'B3', ticker: 'TUPY3', observacao: null },
+  { cliente: 'CCL', bolsa: 'TSX', ticker: 'CCL-B.TO', observacao: null },
+  { cliente: 'FRAPORT', bolsa: 'XETRA', ticker: 'FRA', observacao: null },
+  { cliente: 'NOVARTIS', bolsa: 'SIX', ticker: 'N1VS34', observacao: null },
+  { cliente: 'SANDOZ', bolsa: 'SIX', ticker: 'SDZ', observacao: null },
+  { cliente: 'TDK', bolsa: 'TSE', ticker: 'TTDKY', observacao: null },
+  { cliente: 'DAF', bolsa: 'NASDAQ', ticker: 'PCAR', observacao: 'Paccar (Subsidiária da DAF)' },
+  { cliente: 'DENSO', bolsa: 'TSE', ticker: '6902', observacao: 'Denso Corporation' },
+  { cliente: 'MERCK', bolsa: 'NYSE', ticker: 'MRK; MRCK34', observacao: 'Merck & Co., Inc.' },
+  { cliente: 'OMPI', bolsa: 'NYSE', ticker: 'STVN', observacao: 'Stevanato Group' },
+  { cliente: 'THYSSENKRUPP', bolsa: 'XETRA', ticker: 'TKA', observacao: 'ThyssenKrupp AG' },
+  { cliente: 'BREMBO', bolsa: 'FTMIB', ticker: 'BRE', observacao: 'Brembo S.p.A (matriz)' },
+  { cliente: 'WABTEC', bolsa: 'NYSE', ticker: 'WAB', observacao: null }
 ];
 
 // Filter by exchange for easier access
 const nyseClients = eduClients.filter(client => 
-  client.bolsa.includes('BOLSA DE NY (NYSE)') || 
-  client.bolsa.includes('NASDAQ')
+  client.bolsa === 'NYSE' || 
+  client.bolsa === 'NASDAQ'
 );
 
 const b3Clients = eduClients.filter(client => 
-  client.bolsa.includes('BOLSA DE SP (B3)')
+  client.bolsa === 'B3'
 );
 
 const tokyoClients = eduClients.filter(client => 
-  client.bolsa.includes('TÓQUIO') || 
-  client.bolsa.includes('Tokyo')
+  client.bolsa === 'TSE'
 );
 
 const europeanClients = eduClients.filter(client => 
-  client.bolsa.includes('PARIS') || 
-  client.bolsa.includes('Frankfurt') || 
-  client.bolsa.includes('Milão') || 
-  client.bolsa.includes('Amsterdam') || 
-  client.bolsa.includes('Zurique')
+  ['EPA', 'XETRA', 'FTMIB', 'EURONEXT', 'SIX', 'BIT'].includes(client.bolsa)
 );
 
 // Function to determine sector based on company name
@@ -157,29 +152,25 @@ const industrialClients = eduClientsWithSector.filter(client =>
 
 // Geographic/Market-based filters
 const americanClients = eduClients.filter(client => 
-  client.bolsa.includes('NYSE') || 
-  client.bolsa.includes('NASDAQ') || 
-  client.bolsa.includes('TORONTO')
+  ['NYSE', 'NASDAQ', 'TSX'].includes(client.bolsa)
 );
 
 const asianClients = eduClients.filter(client => 
-  client.bolsa.includes('TÓQUIO') || 
-  client.bolsa.includes('Tokyo') || 
-  client.bolsa.includes('COREIA')
+  ['TSE', 'KRX'].includes(client.bolsa)
 );
 
 const brazilianClients = eduClients.filter(client => 
-  client.bolsa.includes('BOLSA DE SP (B3)')
+  client.bolsa === 'B3'
 );
 
 // Binary filters similar to capital aberto/fechado
 // Domestic vs International (based on exchange location)
 const domesticClients = eduClients.filter(client => 
-  client.bolsa.includes('BOLSA DE SP (B3)')
+  client.bolsa === 'B3'
 );
 
 const internationalClients = eduClients.filter(client => 
-  !client.bolsa.includes('BOLSA DE SP (B3)')
+  client.bolsa !== 'B3'
 );
 
 // Industrial vs Services sectors
@@ -207,11 +198,11 @@ const smallerCompanies = eduClients.filter(client =>
 
 // US vs Non-US markets
 const usMarketClients = eduClients.filter(client => 
-  client.bolsa.includes('NYSE') || client.bolsa.includes('NASDAQ')
+  ['NYSE', 'NASDAQ'].includes(client.bolsa)
 );
 
 const nonUsMarketClients = eduClients.filter(client => 
-  !client.bolsa.includes('NYSE') && !client.bolsa.includes('NASDAQ')
+  !['NYSE', 'NASDAQ'].includes(client.bolsa)
 );
 
 export { 
