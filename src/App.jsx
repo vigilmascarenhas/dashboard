@@ -8,10 +8,12 @@ import { allData, closedCompanies } from './data/dados';
 import { StatisticsCard } from './components/statistics_card';
 import InsightsSection from './components/insights_section';
 import { MultiMarketBusiness } from './components/multi_market_business';
+import { RealtimeMarketBoard } from './components/realtime_market_board';
 
 const Dashboard = () => {
   const [filtroCapital, setFiltroCapital] = useState('TODOS');
   const [filtroBolsa, setFiltroBolsa] = useState('TODAS');
+  const [filtroCliente, setFiltroCliente] = useState('TODOS');
   const [busca, setBusca] = useState('');
 
   const dadosOriginais = allData;
@@ -27,23 +29,24 @@ const Dashboard = () => {
       ticker: '-',
       setor: 'Outros'
     }))
-  ], []);
+  ], [dadosOriginais, empresasNaoAbertas]);
 
   // Filtrar dados
   const dadosFiltrados = useMemo(() => {
     return dadosCompletos.filter(item => {
       const matchCapital = filtroCapital === 'TODOS' || item.capitalAberto === filtroCapital;
       const matchBolsa = filtroBolsa === 'TODAS' || item.bolsa === filtroBolsa;
+      const matchCliente = filtroCliente === 'TODOS' || item.fonte === filtroCliente;
       const matchBusca = item.empresa.toLowerCase().includes(busca.toLowerCase());
-      return matchCapital && matchBolsa && matchBusca;
+      return matchCapital && matchBolsa && matchCliente && matchBusca;
     });
-  }, [filtroCapital, filtroBolsa, busca, dadosCompletos]);
+  }, [filtroCapital, filtroBolsa, filtroCliente, busca, dadosCompletos]);
 
-  // Calcular estatísticas
-  const totalEmpresas = dadosCompletos.length;
-  const empresasAbertas = dadosCompletos.filter(item => item.capitalAberto === 'SIM').length;
+  // Calcular estatísticas baseadas nos dados filtrados
+  const totalEmpresas = dadosFiltrados.length;
+  const empresasAbertas = dadosFiltrados.filter(item => item.capitalAberto === 'SIM').length;
   const empresasFechadas = totalEmpresas - empresasAbertas;
-  const percentualAbertas = ((empresasAbertas / totalEmpresas) * 100).toFixed(1);
+  const percentualAbertas = totalEmpresas > 0 ? ((empresasAbertas / totalEmpresas) * 100).toFixed(1) : '0.0';
 
   // Dados para gráfico de distribuição de capital
   const dadosCapital = [
@@ -54,7 +57,7 @@ const Dashboard = () => {
   // Dados para gráfico de bolsas
   const dadosBolsas = useMemo(() => {
     const bolsas = {};
-    dadosCompletos.forEach(item => {
+    dadosFiltrados.forEach(item => {
       if (item.capitalAberto === 'SIM' && item.bolsa !== '-') {
         const bolsa = item.bolsa;
         bolsas[bolsa] = (bolsas[bolsa] || 0) + 1;
@@ -63,12 +66,12 @@ const Dashboard = () => {
     return Object.entries(bolsas)
       .map(([nome, quantidade]) => ({ nome, quantidade }))
       .sort((a, b) => b.quantidade - a.quantidade);
-  }, [dadosCompletos]);
+  }, [dadosFiltrados]);
 
   // Dados para gráfico de setores
   const dadosSetores = useMemo(() => {
     const setores = {};
-    dadosCompletos.forEach(item => {
+    dadosFiltrados.forEach(item => {
       if (item.capitalAberto === 'SIM') {
         setores[item.setor] = (setores[item.setor] || 0) + 1;
       }
@@ -76,26 +79,38 @@ const Dashboard = () => {
     return Object.entries(setores)
       .map(([nome, quantidade]) => ({ nome, quantidade }))
       .sort((a, b) => b.quantidade - a.quantidade);
-  }, [dadosCompletos]);
+  }, [dadosFiltrados]);
 
-  // Dados para insights
-  const insights = [
-    {
-      insightTittle: 'Diversificação Geográfica',
-      InsightText: `Carteira bem diversificada com presença em ${dadosBolsas.length} bolsas diferentes, incluindo NYSE, TSE, B3 e outras bolsas internacionais.`
-    },
-    {
-      insightTittle: 'Potencial de Crescimento',
-      InsightText: `${empresasFechadas} empresas ainda não são de capital aberto, representando oportunidades de acompanhar futuras aberturas de capital.`
-    },
-    {
-      insightTittle: 'Setor Automotivo',
-      InsightText: 'Forte presença no setor automotivo com empresas como Ford, Toyota, Mahle e outras, indicando especialização neste segmento.'
-    }
-  ];
+  // Dados para insights baseados nos filtros atuais
+  const insights = useMemo(() => {
+    const clienteText = filtroCliente === 'GE' ? 'clientes GE' : filtroCliente === 'EDU' ? 'clientes EDU' : 'clientes';
+    const setorPrincipal = dadosSetores.length > 0 ? dadosSetores[0].nome : 'N/A';
+    const bolsaPrincipal = dadosBolsas.length > 0 ? dadosBolsas[0].nome : 'N/A';
+    
+    return [
+      {
+        insightTittle: 'Diversificação Geográfica',
+        InsightText: `Portfólio de ${clienteText} com presença em ${dadosBolsas.length} bolsas diferentes${dadosBolsas.length > 0 ? `, sendo a principal ${bolsaPrincipal}` : ''}.`
+      },
+      {
+        insightTittle: 'Distribuição de Capital',
+        InsightText: `Entre os ${clienteText}, ${empresasAbertas} são de capital aberto (${percentualAbertas}%) e ${empresasFechadas} são de capital fechado.`
+      },
+      {
+        insightTittle: 'Concentração Setorial',
+        InsightText: dadosSetores.length > 0 ? `O setor ${setorPrincipal} possui ${dadosSetores[0].quantidade} empresas, sendo o segmento com maior representação.` : 'Nenhum setor identificado com os filtros atuais.'
+      }
+    ];
+  }, [dadosSetores, dadosBolsas, empresasAbertas, empresasFechadas, percentualAbertas, filtroCliente]);
 
   const empresasMultibolsa = useMemo(() => {
-    const empresasCount = dadosOriginais.reduce((acc, item) => {
+    // Use dados completos (filtered by client type) for multi-exchange analysis
+    const dadosParaAnalise = dadosCompletos.filter(item => {
+      const matchCliente = filtroCliente === 'TODOS' || item.fonte === filtroCliente;
+      return matchCliente;
+    });
+
+    const empresasCount = dadosParaAnalise.reduce((acc, item) => {
       if (item.capitalAberto === 'SIM') {
         acc[item.empresa] = (acc[item.empresa] || 0) + 1;
       }
@@ -105,7 +120,7 @@ const Dashboard = () => {
     return Object.entries(empresasCount)
       .filter(([, count]) => count > 1)
       .map(([empresa]) => {
-        const listagens = dadosOriginais.filter(item => item.empresa === empresa);
+        const listagens = dadosParaAnalise.filter(item => item.empresa === empresa);
         return {
           empresa,
           setor: listagens[0].setor,
@@ -115,7 +130,7 @@ const Dashboard = () => {
           }))
         };
       });
-  }, [dadosOriginais]);
+  }, [dadosCompletos, filtroCliente]);
 
   return (
     <div className="min-h-screen p-6" style={{backgroundColor: '#C7E0F0'}}>
@@ -140,6 +155,20 @@ const Dashboard = () => {
                 <option value="TODOS">Todos</option>
                 <option value="SIM">Capital Aberto</option>
                 <option value="NÃO">Capital Fechado</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-white" />
+              <select 
+                value={filtroCliente} 
+                onChange={(e) => setFiltroCliente(e.target.value)}
+                className="text-white rounded-lg px-3 py-2 border" 
+                style={{backgroundColor: 'rgba(255,255,255,0.2)', borderColor: '#8BC0DE'}}
+              >
+                <option value="TODOS">Todos os Clientes</option>
+                <option value="GE">Clientes GE</option>
+                <option value="EDU">Clientes EDU</option>
               </select>
             </div>
             
@@ -170,6 +199,11 @@ const Dashboard = () => {
               />
             </div>
           </div>
+        </div>
+
+        Real-time Market Board
+        <div className="mb-8">
+          <RealtimeMarketBoard />
         </div>
 
         {/* Cards de Estatísticas */}

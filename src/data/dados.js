@@ -1,52 +1,97 @@
-const allData = [
-  { empresa: 'BAXTER', capitalAberto: 'SIM', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'BAX', setor: 'Farmacêutico' },
-  { empresa: 'FORD', capitalAberto: 'SIM', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'F', setor: 'Automotivo' },
-  { empresa: 'FITESA', capitalAberto: 'SIM', bolsa: 'BOLSA DE SP (B3)', ticker: 'FIT3', setor: 'Têxtil' },
-  { empresa: 'MAHLE', capitalAberto: 'SIM', bolsa: 'BOLSA DE SP (B3)', ticker: 'LEVE3', setor: 'Automotivo' },
-  { empresa: 'METALAC', capitalAberto: 'SIM', bolsa: 'BOLSA DE BELGRADO (BELEX)', ticker: 'MTLC', setor: 'Metalúrgica' },
-  { empresa: 'ROP - ENGIE', capitalAberto: 'SIM', bolsa: 'BOLSA DE SP (B3)', ticker: 'EGIE3', setor: 'Energia' },
-  { empresa: 'BAKER HUGHES', capitalAberto: 'SIM', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'BKR', setor: 'Petróleo & Gas' },
-  { empresa: 'CROWN', capitalAberto: 'SIM', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'CCK', setor: 'Embalagens' },
-  { empresa: 'Koito Manufacturing Co Ltd (NAL DO BRASIL)', capitalAberto: 'SIM', bolsa: 'BOLSA DE TOQUIO (TSE)', ticker: '7276', setor: 'Automotivo' },
-  { empresa: 'Asahi Glass Co (AGC)', capitalAberto: 'SIM', bolsa: 'BOLSA DE TOQUIO (TSE)', ticker: '5201', setor: 'Industrial' },
-  { empresa: 'CJ', capitalAberto: 'SIM', bolsa: 'BOLSA DA COREIA DO SUL (KRX)', ticker: '001040', setor: 'Alimentício' },
-  { empresa: 'CNH Industrial', capitalAberto: 'SIM', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'CNH', setor: 'Maquinário' },
-  { empresa: 'FAURECIA', capitalAberto: 'SIM', bolsa: 'BOLSA DE PARIS (EPA)', ticker: 'FRVIA', setor: 'Automotivo' },
-  { empresa: 'GE Healthcare', capitalAberto: 'SIM', bolsa: 'BOLSA DE NY (NASDAQ)', ticker: 'GEHC', setor: 'Saúde' },
-  { empresa: 'GROUPE SEB', capitalAberto: 'SIM', bolsa: 'BOLSA DE PARIS (EPA)', ticker: 'SK', setor: 'Eletrodomésticos' },
-  { empresa: 'GE Vernova', capitalAberto: 'SIM', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'GEV', setor: 'Energia' },
-  { empresa: 'IVECO', capitalAberto: 'SIM', bolsa: 'BOLSA DE MILÃO (BIT)', ticker: 'IVG', setor: 'Automotivo' },
-  { empresa: 'Legrand', capitalAberto: 'SIM', bolsa: 'BOLSA DE PARIS (EPA)', ticker: 'LR', setor: 'Elétrico' },
-  { empresa: 'Yamaha', capitalAberto: 'SIM', bolsa: 'BOLSA DE TOQUIO (TSE)', ticker: '7951', setor: 'Industrial' },
-  { empresa: 'AKZO NOBEL', capitalAberto: 'SIM', bolsa: 'Euronext Amsterdam', ticker: 'AKZA', setor: 'Químico' },
-  { empresa: 'BRIDGESTONE', capitalAberto: 'SIM', bolsa: 'BOLSA DE TOQUIO (TSE)', ticker: '5108', setor: 'Pneus' },
-  { empresa: 'COLGATE', capitalAberto: 'SIM', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'CL', setor: 'Higiene' },
-  { empresa: 'COLGATE', capitalAberto: 'SIM', bolsa: 'BOLSA DE SP (B3)', ticker: 'COLG34', setor: 'Higiene' },
-  { empresa: 'FRESENIUS', capitalAberto: 'SIM', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'FMS', setor: 'Saúde' },
-  { empresa: 'FRESENIUS', capitalAberto: 'SIM', bolsa: 'XETRA (Frankfurt)', ticker: 'FRE', setor: 'Saúde' },
-  { empresa: 'FRESENIUS', capitalAberto: 'SIM', bolsa: 'XETRA (Frankfurt)', ticker: 'FME', setor: 'Saúde' },
-  { empresa: 'PANASONIC', capitalAberto: 'SIM', bolsa: 'BOLSA DE TOQUIO (TSE)', ticker: '6752', setor: 'Eletrônico' },
-  { empresa: 'PPG', capitalAberto: 'SIM', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'PPG', setor: 'Químico' },
-  { empresa: 'TOYOTA', capitalAberto: 'SIM', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'TM', setor: 'Automotivo' },
-  { empresa: 'TOYOTA', capitalAberto: 'SIM', bolsa: 'BOLSA DE TOQUIO (TSE)', ticker: '7203', setor: 'Automotivo' },
-  { empresa: 'TOYOTA', capitalAberto: 'SIM', bolsa: 'BOLSA DE SP (B3)', ticker: 'TOYB3', setor: 'Automotivo' },
-  { empresa: 'TUPPERWARE', capitalAberto: 'SIM', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'TUP', setor: 'Utensílios' },
-  { empresa: 'TUPY', capitalAberto: 'SIM', bolsa: 'BOLSA DE SP (B3)', ticker: 'TUPY3', setor: 'Metalúrgica' },
-  { empresa: 'CCL', capitalAberto: 'SIM', bolsa: 'TORONTO STOCK EXCHANGE (TSX)', ticker: 'CCL-B.TO', setor: 'Embalagens' },
-  { empresa: 'FRAPORT', capitalAberto: 'SIM', bolsa: 'Bolsa de Frankfurt (Xetra)', ticker: 'FRA.bo/FRAG', setor: 'Aeroportuário' },
-  { empresa: 'SANDOZ', capitalAberto: 'SIM', bolsa: 'Bolsa de Valores da SIX Swiss Exchange', ticker: 'SDZ', setor: 'Farmacêutico' },
-  { empresa: 'TDK', capitalAberto: 'SIM', bolsa: 'Bolsa de Tóquio (Tokyo Stock Exchange) e Merval', ticker: 'TTDKY', setor: 'Eletrônico' },
-  { empresa: 'DAF', capitalAberto: 'SIM', bolsa: 'Bolsa NASDAQ USA', ticker: 'PCAR', setor: 'Automotivo' },
-  { empresa: 'DENSO', capitalAberto: 'SIM', bolsa: 'Tokyo Stock Exchange', ticker: '6902', setor: 'Automotivo' },
-  { empresa: 'MERCK', capitalAberto: 'SIM', bolsa: 'BOLSA DE NY (NYSE)', ticker: 'MRK', setor: 'Farmacêutico' },
-  { empresa: 'MERCK', capitalAberto: 'SIM', bolsa: 'BOLSA DE SP (B3)', ticker: 'MRCK34', setor: 'Farmacêutico' },
-  { empresa: 'NOVARTIS', capitalAberto: 'SIM', bolsa: 'Bolsa de Valores da Zurique (SIX)', ticker: 'NOVN', setor: 'Farmacêutico' },
-  { empresa: 'NOVARTIS', capitalAberto: 'SIM', bolsa: 'BOLSA DE SP (B3)', ticker: 'NVVS34', setor: 'Farmacêutico' },
-  { empresa: 'OMPI', capitalAberto: 'SIM', bolsa: 'Bolsa de NY (NYSE)', ticker: 'STVN', setor: 'Farmacêutico' },
-  { empresa: 'THYSSENKRUPP', capitalAberto: 'SIM', bolsa: 'Frankfurt Stock Exchange', ticker: 'TKA', setor: 'Siderúrgica' },
-  { empresa: 'BREMBO', capitalAberto: 'SIM', bolsa: 'Bolsa de Valores de Milão', ticker: 'BRE', setor: 'Automotivo' },
-  { empresa: 'WABTEC', capitalAberto: 'SIM', bolsa: 'Bolsa de Valores de NY (NYSE)', ticker: 'WAB', setor: 'Ferroviário' }
-];
+import { eduClients } from './eduClients.js';
+import { geClients } from './geClients.js';
+
+// Function to determine sector based on company name (basic mapping)
+const getSectorForCompany = (companyName) => {
+  const name = companyName.toLowerCase();
+  
+  // Sector mapping based on company names
+  const sectorMap = {
+    'baxter': 'Farmacêutico',
+    'ford': 'Automotivo',
+    'fitesa': 'Têxtil',
+    'mahle': 'Automotivo',
+    'metalac': 'Metalúrgica',
+    'engie': 'Energia',
+    'baker hughes': 'Petróleo & Gas',
+    'crown': 'Embalagens',
+    'koito': 'Automotivo',
+    'asahi glass': 'Industrial',
+    'cj': 'Alimentício',
+    'cnh industrial': 'Maquinário',
+    'faurecia': 'Automotivo',
+    'ge healthcare': 'Saúde',
+    'groupe seb': 'Eletrodomésticos',
+    'ge vernova': 'Energia',
+    'iveco': 'Automotivo',
+    'legrand': 'Elétrico',
+    'yamaha': 'Industrial',
+    'akzo nobel': 'Químico',
+    'bridgestone': 'Pneus',
+    'colgate': 'Higiene',
+    'fresenius': 'Saúde',
+    'panasonic': 'Eletrônico',
+    'ppg': 'Químico',
+    'toyota': 'Automotivo',
+    'tupperware': 'Utensílios',
+    'tupy': 'Metalúrgica',
+    'ccl': 'Embalagens',
+    'fraport': 'Aeroportuário',
+    'sandoz': 'Farmacêutico',
+    'tdk': 'Eletrônico',
+    'daf': 'Automotivo',
+    'denso': 'Automotivo',
+    'merck': 'Farmacêutico',
+    'novartis': 'Farmacêutico',
+    'ompi': 'Farmacêutico',
+    'thyssenkrupp': 'Siderúrgica',
+    'brembo': 'Automotivo',
+    'wabtec': 'Ferroviário',
+    'motiva': 'Energia',
+    'martin brower': 'Alimentício',
+    'amil': 'Saúde',
+    'hotel': 'Hotelaria',
+    'turismo': 'Turismo',
+    'supermercados': 'Varejo',
+    'armarinhos': 'Varejo',
+    'modernarte': 'Varejo',
+    'kodak': 'Tecnologia',
+    'outback': 'Alimentício',
+    'raiadrogasil': 'Farmacêutico',
+    'unimed': 'Saúde'
+  };
+
+  for (const [key, sector] of Object.entries(sectorMap)) {
+    if (name.includes(key)) {
+      return sector;
+    }
+  }
+  
+  return 'Outros'; // Default sector
+};
+
+// Transform eduClients to allData format
+const eduData = eduClients.map(client => ({
+  empresa: client.cliente,
+  capitalAberto: 'SIM', // All edu clients are publicly traded
+  bolsa: client.bolsa,
+  ticker: client.ticker,
+  setor: getSectorForCompany(client.cliente),
+  fonte: 'EDU'
+}));
+
+// Transform geClients to allData format
+const geData = geClients.map(client => ({
+  empresa: client.cliente,
+  capitalAberto: client.capitalAberto || 'SIM',
+  bolsa: client.bolsa,
+  ticker: client.ticker,
+  setor: getSectorForCompany(client.cliente),
+  fonte: 'GE'
+}));
+
+// Combine all data
+const allData = [...eduData, ...geData];
 
 // Adicionar empresas que não são de capital aberto
 const closedCompanies = [
@@ -61,4 +106,47 @@ const closedCompanies = [
   'MIIKA NACIONAL', 'PURATOS', 'REGALI', 'SANTA CLARA', 'SEOYON', 'WELLOUR', 'BEPLAST'
 ];
 
-export { allData, closedCompanies };
+// Separate NYSE and B3 data for easier access
+const usData = allData.filter(company => 
+  company.bolsa && (
+    company.bolsa.includes('BOLSA DE NY (NYSE)') || 
+    company.bolsa.includes('NASDAQ')
+  )
+);
+
+const eurData = allData.filter(company => 
+  company.bolsa && company.bolsa.includes('BOLSA DE LISBOA (EURONEXT)')
+);
+
+const brData = allData.filter(company => 
+  company.bolsa && company.bolsa.includes('BOLSA DE SP (B3)')
+);
+
+// Additional filters
+const publicCompanies = allData.filter(company => 
+  company.capitalAberto === 'SIM'
+);
+
+const privateCompanies = allData.filter(company => 
+  company.capitalAberto === 'NÃO'
+);
+
+const eduCompanies = allData.filter(company => 
+  company.fonte === 'EDU'
+);
+
+const geCompanies = allData.filter(company => 
+  company.fonte === 'GE'
+);
+
+export { 
+  allData, 
+  closedCompanies, 
+  usData, 
+  brData,
+  eurData,
+  publicCompanies,
+  privateCompanies,
+  eduCompanies,
+  geCompanies
+};
