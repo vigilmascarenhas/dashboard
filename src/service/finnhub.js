@@ -2,7 +2,7 @@ const FINNHUB_API_KEY = import.meta.env.VITE_FINNHUB_API_KEY;
 
 // Rate limiting: Finnhub free tier allows 60 requests per minute
 const REQUESTS_PER_MINUTE = 50; // Leave some buffer
-const DELAY_BETWEEN_REQUESTS = 60000 / REQUESTS_PER_MINUTE; // ms between requests
+const DELAY_BETWEEN_REQUESTS = 1000 / REQUESTS_PER_MINUTE; // ms between requests
 
 // Utility function to delay execution
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
